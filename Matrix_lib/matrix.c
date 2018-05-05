@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+#include "../lib/xalloc.h"
 #include "../NN_Test/Matrix.h"
 
 // matrix* sclr_mult(matrix *A, float sclr) {
@@ -319,27 +320,90 @@
 // 	return;
 // }
 
-JNIEXPORT jfloat JNICALL
-Java_Matrix_get_1element(JNIEnv *env, jobject obj, jint row, jint col) {
-	jclass object_class; // object's class
-	jfieldID fid_cols, fid_data; // field IDs
+struct data_header {
+	jfloatArray data_obj;
+	jfloat *data_array;
+} typedef data;
+
+jfloat get_rows(JNIEnv * env, jobject obj) {
+	jclass object_class;
+	jfieldID fid_rows;
+
+	object_class = (*env)->GetObjectClass(env, obj);
+	fid_rows = (*env)->GetFieldID(env, object_class, "rows", "I");
+
+	if (fid_rows == NULL) {
+		return -42;
+	}
+
+	jint rows = (*env)->GetIntField(env, obj, fid_rows);
+
+	return rows;
+}
+
+jfloat get_cols(JNIEnv * env, jobject obj) {
+	jclass object_class;
+	jfieldID fid_cols;
 
 	object_class = (*env)->GetObjectClass(env, obj);
 	fid_cols = (*env)->GetFieldID(env, object_class, "cols", "I");
-	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
 
-	if (fid_cols == NULL || fid_data == NULL) {
-		return -42; // failed to retrieve fields
+	if (fid_cols == NULL) {
+		return -42;
 	}
 
 	jint cols = (*env)->GetIntField(env, obj, fid_cols);
+
+	return cols;
+}
+
+data* get_data(JNIEnv * env, jobject obj) {
+	jclass object_class;
+	jfieldID fid_data;
+
+	object_class = (*env)->GetObjectClass(env, obj);
+	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
+
+	if (fid_data == NULL) {
+		return NULL;
+	}
+
 	jfloatArray data_obj = (*env)->GetObjectField(env, obj, fid_data);
-	jfloat *data = (*env)->GetFloatArrayElements(env, data_obj, 0); // allocate an array
+	jfloat *data_array = (*env)->GetFloatArrayElements(env, data_obj, 0); // allocate an array
+
+	data *obj_data = xcalloc(1, sizeof(data));
+	obj_data->data_obj = data_obj;
+	obj_data->data_array = data_array;
+
+	return obj_data;
+}
+
+JNIEXPORT void JNICALL
+Java_Matrix_set_1element(JNIEnv * env, jobject obj, jint row, jint col, jfloat element){
+	data *obj_data = get_data()
+}
+
+JNIEXPORT jfloat JNICALL
+Java_Matrix_get_1element(JNIEnv *env, jobject obj, jint row, jint col) {
+	jclass object_class; // object's class
+	jfieldID fid_data; // field ID
+
+	object_class = (*env)->GetObjectClass(env, obj);
+	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
+
+	if (fid_data == NULL) {
+		return -42; // failed to retrieve fields
+	}
+
+	jint cols = get_cols(env, obj);
+	
+	data *obj_data = get_data(env, obj);
 
 	jint index = (row * cols) + col;
-	jfloat element = data[index];
+	jfloat element = obj_data->data_array[index];
 
-	(*env)->ReleaseFloatArrayElements(env, data_obj, data, 0); // free array
+	(*env)->ReleaseFloatArrayElements(env, obj_data->data_obj, obj_data->data_array, 0); // free array
+	free(obj_data); // free data struct
 
 	return element;
 
@@ -380,9 +444,6 @@ Java_Matrix_print(JNIEnv *env, jobject obj) {
 		}
 		printf("\n");
 	}
-
-	// printf("Matrix rows: %x\n", rows);
-	// printf("Matrix cols: %x\n", cols);
 
 	return;
 
