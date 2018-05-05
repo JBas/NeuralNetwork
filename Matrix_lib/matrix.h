@@ -32,6 +32,9 @@ void matrix_map_(matrix *A, func *f);
 matrix* transpose(matrix *A);
 void randomize(matrix *A);
 
+matrix* fromArray(float *data);
+float* toArray(matrix* A);
+
 bool is_equal(matrix *A, matrix *B);
 
 matrix* new_matrix(int rows, int cols, float *data);
