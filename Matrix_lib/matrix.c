@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
-#include "jni.h"
 #include "../NN_Test/Matrix.h"
 
 // matrix* sclr_mult(matrix *A, float sclr) {
@@ -330,14 +329,14 @@ Java_Matrix_get_1element(JNIEnv *env, jobject obj, jint row, jint col) {
 	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
 
 	if (fid_cols == NULL || fid_data == NULL) {
-		return; // failed to retrieve fields
+		return -42; // failed to retrieve fields
 	}
 
-	jint cols = (*env)->GetObjectField(env, obj, fid_cols);
+	jint cols = (*env)->GetIntField(env, obj, fid_cols);
 	jfloatArray data_obj = (*env)->GetObjectField(env, obj, fid_data);
-	jfloat *data = (*env)->GetFloatArrayElement(env, data, 0); // allocate an array
+	jfloat *data = (*env)->GetFloatArrayElements(env, data_obj, 0); // allocate an array
 
-	jint index = row*cols + col;
+	jint index = (row * cols) + col;
 	jfloat element = data[index];
 
 	(*env)->ReleaseFloatArrayElements(env, data_obj, data, 0); // free array
@@ -371,16 +370,19 @@ Java_Matrix_print(JNIEnv *env, jobject obj) {
 	}
 
 	// Read instance fields rows, cols, data
-	jint rows = (*env)->GetObjectField(env, obj, fid_rows);
-	jint cols = (*env)->GetObjectField(env, obj, fid_cols);
+	jint rows = (*env)->GetIntField(env, obj, fid_rows);
+	jint cols = (*env)->GetIntField(env, obj, fid_cols);
 
 	for (jint i = 0; i < rows; i++) {
 		for (jint j = 0; j < cols; j++) {
-			jfloat element = (*env)->CallFloatMethod(env, obj, i, j);
+			jfloat element = (jfloat)((*env)->CallFloatMethod(env, obj, mid_get, i, j));
 			printf("%f ", element);
 		}
 		printf("\n");
 	}
+
+	// printf("Matrix rows: %x\n", rows);
+	// printf("Matrix cols: %x\n", cols);
 
 	return;
 
