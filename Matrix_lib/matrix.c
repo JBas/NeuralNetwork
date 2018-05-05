@@ -2,9 +2,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
-#include <time.h>
-#include "../lib/xalloc.h"
-#include "matrix.h"
+#include "jni.h"
+#include "Matrix.h"
 
 matrix* sclr_mult(matrix *A, float sclr) {
 	assert(A != NULL);
@@ -321,16 +320,42 @@ void set_element(matrix *A, int row, int col, float element) {
 	return;
 }
 
-void print_matrix(matrix *A) {
-	assert(A != NULL);
+JNIEXPORT void JNICALL
+Java_Matrix_print(JNIEnv *env, jobject obj) {
+	jclass object_class; // object's class
+	jfieldID fid_rows, fid_cols; // field IDs
+	jmethodID mid_get; // instance method ID
 
-	for (int i = 0; i < A->rows; i++) {
-		for (int j = 0; j < A->cols; j++) {
-			printf("%f  ", get_element(A, i, j));
+	// Get Reference to object's class
+	object_class = (*env)->GetObjectClass(env, obj);
+
+	// Look for instance fields rows, cols, data in the object class
+	fid_rows = (*env)->GetFieldID(env, object_class, "rows", "I");
+	fid_cols = (*env)->GetFieldID(env, object_class, "cols", "I");
+
+	if (fid_rows == NULL || fid_cols == NULL) {
+		return; // failed to find fields
+	}
+
+	// Look for get_elemet, set_element IDs
+	mid_get = (*env)->GetMethodID(env, object_class, "get_element", "(II)F");
+
+	if (mid_get == NULL) {
+		return; // failed to find instance methods
+	}
+
+	// Read instance fields rows, cols, data
+	jint rows = (*env)->GetObjectField(env, obj, fid_rows);
+	jint cols = (*env)->GetObjectField(env, obj, fid_cols);
+
+	for (jint i = 0; i < rows; i++) {
+		for (jint j = 0; j < cols; j++) {
+			jfloat element = (*env)->CallFloatMethod(env, obj, i, j);
+			printf("%f ", element);
 		}
 		printf("\n");
 	}
-	printf("\n");
 
 	return;
+
 }
