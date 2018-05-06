@@ -378,32 +378,48 @@ data* get_data(JNIEnv * env, jobject obj) {
 	return obj_data;
 }
 
+void free_data(JNIEnv *env, data *obj_data) {
+	(*env)->ReleaseFloatArrayElements(env, obj_data->data_obj, obj_data->data_array, 0); // free array
+	free(obj_data); // free data struct
+	return;
+}
+
 JNIEXPORT void JNICALL
 Java_Matrix_set_1element(JNIEnv * env, jobject obj, jint row, jint col, jfloat element){
-	data *obj_data = get_data()
+	jint rows = get_rows(env, obj);
+	jint cols = get_cols(env, obj);
+
+	assert(row >= 0 && row < rows);
+	assert(col >= 0 && col < cols);
+
+	jfloat singleton[] = {element};
+
+	data *obj_data = get_data(env, obj);
+	assert(obj_data != NULL);
+	assert(obj_data->data_obj != NULL);
+
+	jint index = row*cols + col;
+
+	(*env)->SetFloatArrayRegion(env, singleton, index, 1, obj_data->data_obj);
+
+	free_data(env, obj_data);
+	return;
 }
 
 JNIEXPORT jfloat JNICALL
 Java_Matrix_get_1element(JNIEnv *env, jobject obj, jint row, jint col) {
-	jclass object_class; // object's class
-	jfieldID fid_data; // field ID
-
-	object_class = (*env)->GetObjectClass(env, obj);
-	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
-
-	if (fid_data == NULL) {
-		return -42; // failed to retrieve fields
-	}
-
+	jint rows = get_rows(env, obj);
 	jint cols = get_cols(env, obj);
+
+	assert(row >= 0 && row < rows);
+	assert(col >= 0 && col < cols);
 	
 	data *obj_data = get_data(env, obj);
 
 	jint index = (row * cols) + col;
 	jfloat element = obj_data->data_array[index];
 
-	(*env)->ReleaseFloatArrayElements(env, obj_data->data_obj, obj_data->data_array, 0); // free array
-	free(obj_data); // free data struct
+	free_data(env, obj_data);
 
 	return element;
 

@@ -28,7 +28,7 @@ public class Matrix {
   //public native Matrix transpose(Matrix A);
   //public native boolean is_equal(Matrix A);
   public native float get_element(int row, int col);
-  //public native void set_element(int row, int col, float element);
+  public native void set_element(int row, int col, float element);
   public native void print();
   
   static { System.loadLibrary("matrix");}
