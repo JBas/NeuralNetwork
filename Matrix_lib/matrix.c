@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
-#include "../lib/xalloc.h"
 #include "../NN_Test/Matrix.h"
 
 jint get_rows(JNIEnv *env, jobject obj) {

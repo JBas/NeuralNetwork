@@ -25,13 +25,21 @@ public class Matrix {
     }
   }
   
-  public static float sigmoid(float x) {
+  public static float sig(float x) {
     return 1 / (1 + (float)Math.exp(-x));
   }
   
-  public void map() {
+  public static float dsig(float x) {
+    return x / (1 - x);
+  }
+  
+  public void map(String func) {
     for (int i = 0; i < this.rows*this.cols; i++) {
-      this.data[i] = sigmoid(this.data[i]);
+      if (func == "sig") {
+        this.data[i] = sig(this.data[i]);
+      } else if (func == "dsig") {
+        this.data[i] = dsig(this.data[i]);
+      }
     }
   }
   
@@ -50,9 +58,6 @@ public class Matrix {
   public native void matrix_add(Matrix B);
   public native void matrix_sub(Matrix B);
   
-  
-  
-  
   public static native Matrix transpose(Matrix A);
   
   public static native Matrix fromArray(int rows, int cols, float[] data);
@@ -64,5 +69,5 @@ public class Matrix {
   public native void set_element(int row, int col, float element);
   public native void print();
   
-  static { System.loadLibrary("matrix");}
+  //static { System.loadLibrary("matrix"); }
 }
