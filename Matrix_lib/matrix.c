@@ -325,142 +325,624 @@ struct data_header {
 	jfloat *data_array;
 } typedef data;
 
-jfloat get_rows(JNIEnv * env, jobject obj) {
-	jclass object_class;
+jint get_rows(JNIEnv *env, jobject obj) {
+	assert(env != NULL);
+	assert(obj != NULL);
+
+	jclass obj_class;
 	jfieldID fid_rows;
 
-	object_class = (*env)->GetObjectClass(env, obj);
-	fid_rows = (*env)->GetFieldID(env, object_class, "rows", "I");
+	obj_class = (*env)->GetObjectClass(env, obj);
+	assert(obj_class != NULL);
 
-	if (fid_rows == NULL) {
-		return -42;
-	}
+	fid_rows = (*env)->GetFieldID(env, obj_class, "rows", "I");
+	assert(fid_rows != NULL);
 
 	jint rows = (*env)->GetIntField(env, obj, fid_rows);
+
+	assert(rows > 0);
 
 	return rows;
 }
 
-jfloat get_cols(JNIEnv * env, jobject obj) {
-	jclass object_class;
+jint get_cols(JNIEnv *env, jobject obj) {
+	assert(env != NULL);
+	assert(obj != NULL);
+
+	jclass obj_class;
 	jfieldID fid_cols;
 
-	object_class = (*env)->GetObjectClass(env, obj);
-	fid_cols = (*env)->GetFieldID(env, object_class, "cols", "I");
+	obj_class = (*env)->GetObjectClass(env, obj);
+	assert(obj_class != NULL);
 
-	if (fid_cols == NULL) {
-		return -42;
-	}
+	fid_cols = (*env)->GetFieldID(env, obj_class, "cols", "I");
+	assert(fid_cols != NULL);
 
 	jint cols = (*env)->GetIntField(env, obj, fid_cols);
+
+	assert(cols > 0);
 
 	return cols;
 }
 
-data* get_data(JNIEnv * env, jobject obj) {
-	jclass object_class;
-	jfieldID fid_data;
+// data* get_data(JNIEnv *env, jobject obj, jboolean iscopy) {
+// 	jclass object_class;
+// 	jfieldID fid_data;
 
-	object_class = (*env)->GetObjectClass(env, obj);
-	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
+// 	object_class = (*env)->GetObjectClass(env, obj);
+// 	fid_data = (*env)->GetFieldID(env, object_class, "data", "[F");
 
-	if (fid_data == NULL) {
-		return NULL;
+// 	if (fid_data == NULL) {
+// 		return NULL;
+// 	}
+
+// 	jfloatArray data_obj = (*env)->GetObjectField(env, obj, fid_data);
+// 	jfloat *data_array = (*env)->GetFloatArrayElements(env, data_obj, &iscopy); // allocate an array
+
+// 	data *obj_data = xcalloc(1, sizeof(data));
+// 	obj_data->data_obj = data_obj;
+// 	obj_data->data_array = data_array;
+
+// 	return obj_data;
+// }
+
+// void free_data(JNIEnv *env, data *obj_data) {
+// 	(*env)->ReleaseFloatArrayElements(env, obj_data->data_obj, obj_data->data_array, 0); // free array
+// 	free(obj_data); // free data struct
+// 	return;
+// }
+
+//@TODO: use the getter/setters as defined below
+JNIEXPORT void JNICALL
+Java_Matrix_sclr_1mult__F(JNIEnv *env, jobject this, jfloat sclr) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class;
+	jfieldID fid_data_this;
+
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	// Get matrix A data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data_this = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data_this != NULL);
+
+	jfloatArray array_obj_this = (*env)->GetObjectField(env, this, fid_data_this);
+	assert(array_obj_this != NULL);
+
+	jfloat *array_this = (*env)->GetFloatArrayElements(env, array_obj_this, 0);
+	assert(array_this != NULL);
+	// done getting matrix A data
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jint index = i*cols_this + j;
+			assert(index >= 0 && index < rows_this*cols_this);
+
+			array_this[index] = array_this[index] * sclr;
+		}
 	}
 
-	jfloatArray data_obj = (*env)->GetObjectField(env, obj, fid_data);
-	jfloat *data_array = (*env)->GetFloatArrayElements(env, data_obj, 0); // allocate an array
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj_this, array_this, 0);
 
-	data *obj_data = xcalloc(1, sizeof(data));
-	obj_data->data_obj = data_obj;
-	obj_data->data_array = data_array;
-
-	return obj_data;
-}
-
-void free_data(JNIEnv *env, data *obj_data) {
-	(*env)->ReleaseFloatArrayElements(env, obj_data->data_obj, obj_data->data_array, 0); // free array
-	free(obj_data); // free data struct
 	return;
 }
 
+//@TODO: use the getter/setters as defined below
 JNIEXPORT void JNICALL
-Java_Matrix_set_1element(JNIEnv * env, jobject obj, jint row, jint col, jfloat element){
+Java_Matrix_sclr_1add__F(JNIEnv *env, jobject this, jfloat sclr) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class;
+	jfieldID fid_data_this;
+
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	// Get matrix A data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data_this = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data_this != NULL);
+
+	jfloatArray array_obj_this = (*env)->GetObjectField(env, this, fid_data_this);
+	assert(array_obj_this != NULL);
+
+	jfloat *array_this = (*env)->GetFloatArrayElements(env, array_obj_this, 0);
+	assert(array_this != NULL);
+	// done getting matrix A data
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jint index = i*cols_this + j;
+			assert(index >= 0 && index < rows_this*cols_this);
+
+			array_this[index] = array_this[index] + sclr;
+		}
+	}
+
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj_this, array_this, 0);
+
+	return;
+}
+
+//@TODO: use the getter/setters as defined below
+JNIEXPORT void JNICALL
+Java_Matrix_matrix_1mult__LMatrix_2(JNIEnv *env, jobject this, jobject other) {
+	assert(env != NULL);
+	assert(this != NULL);
+	assert(other != NULL);
+
+	jclass this_class, other_class;
+	jfieldID fid_data_this, fid_data_other;
+
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	jint rows_other = get_rows(env, other);
+	jint cols_other = get_cols(env, other);
+
+	assert(rows_this == rows_other);
+	assert(cols_this == cols_other);
+
+	// Get matrix A data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data_this = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data_this != NULL);
+
+	jfloatArray array_obj_this = (*env)->GetObjectField(env, this, fid_data_this);
+	assert(array_obj_this != NULL);
+
+	jfloat *array_this = (*env)->GetFloatArrayElements(env, array_obj_this, 0);
+	assert(array_this != NULL);
+	// done getting matrix A data
+	
+
+	// Get matrix B data
+	other_class = (*env)->GetObjectClass(env, other);
+	assert(other_class != NULL);
+
+	fid_data_other = (*env)->GetFieldID(env, other_class, "data", "[F");
+	assert(fid_data_other != NULL);
+
+	jfloatArray array_obj_other = (*env)->GetObjectField(env, other, fid_data_other);
+	assert(array_obj_other != NULL);
+
+	jfloat *array_other = (*env)->GetFloatArrayElements(env, array_obj_other, 0);
+	assert(array_other != NULL);
+	// done getting matrix B data
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jint index = i*cols_this + j;
+			assert(index >= 0 && index < rows_this*cols_this);
+
+			array_this[index] = array_this[index] * array_other[index];
+		}
+	}
+
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj_this, array_this, 0);
+	(*env)->ReleaseFloatArrayElements(env, array_obj_other, array_other, 0);
+
+	return;
+}
+
+//@TODO: use the getter/setters as defined below
+JNIEXPORT void JNICALL
+Java_Matrix_matrix_1add__LMatrix_2(JNIEnv *env, jobject this, jobject other) {
+	assert(env != NULL);
+	assert(this != NULL);
+	assert(other != NULL);
+
+	jclass this_class, other_class;
+	jfieldID fid_data_this, fid_data_other;
+
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	jint rows_other = get_rows(env, other);
+	jint cols_other = get_cols(env, other);
+
+	assert(rows_this == rows_other);
+	assert(cols_this == cols_other);
+
+	// Get matrix A data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data_this = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data_this != NULL);
+
+	jfloatArray array_obj_this = (*env)->GetObjectField(env, this, fid_data_this);
+	assert(array_obj_this != NULL);
+
+	jfloat *array_this = (*env)->GetFloatArrayElements(env, array_obj_this, 0);
+	assert(array_this != NULL);
+	// done getting matrix A data
+	
+
+	// Get matrix B data
+	other_class = (*env)->GetObjectClass(env, other);
+	assert(other_class != NULL);
+
+	fid_data_other = (*env)->GetFieldID(env, other_class, "data", "[F");
+	assert(fid_data_other != NULL);
+
+	jfloatArray array_obj_other = (*env)->GetObjectField(env, other, fid_data_other);
+	assert(array_obj_other != NULL);
+
+	jfloat *array_other = (*env)->GetFloatArrayElements(env, array_obj_other, 0);
+	assert(array_other != NULL);
+	// done getting matrix B data
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jint index = i*cols_this + j;
+			assert(index >= 0 && index < rows_this*cols_this);
+
+			array_this[index] = array_this[index] + array_other[index];
+		}
+	}
+
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj_this, array_this, 0);
+	(*env)->ReleaseFloatArrayElements(env, array_obj_other, array_other, 0);
+
+	return;
+}
+
+//@TODO: use the getter/setters as defined below
+JNIEXPORT void JNICALL
+Java_Matrix_matrix_1sub__LMatrix_2(JNIEnv *env, jobject this, jobject other) {
+	assert(env != NULL);
+	assert(this != NULL);
+	assert(other != NULL);
+
+	jclass this_class, other_class;
+	jfieldID fid_data_this, fid_data_other;
+
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	jint rows_other = get_rows(env, other);
+	jint cols_other = get_cols(env, other);
+
+	assert(rows_this == rows_other);
+	assert(cols_this == cols_other);
+
+	// Get matrix A data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data_this = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data_this != NULL);
+
+	jfloatArray array_obj_this = (*env)->GetObjectField(env, this, fid_data_this);
+	assert(array_obj_this != NULL);
+
+	jfloat *array_this = (*env)->GetFloatArrayElements(env, array_obj_this, 0);
+	assert(array_this != NULL);
+	// done getting matrix A data
+	
+
+	// Get matrix B data
+	other_class = (*env)->GetObjectClass(env, other);
+	assert(other_class != NULL);
+
+	fid_data_other = (*env)->GetFieldID(env, other_class, "data", "[F");
+	assert(fid_data_other != NULL);
+
+	jfloatArray array_obj_other = (*env)->GetObjectField(env, other, fid_data_other);
+	assert(array_obj_other != NULL);
+
+	jfloat *array_other = (*env)->GetFloatArrayElements(env, array_obj_other, 0);
+	assert(array_other != NULL);
+	// done getting matrix B data
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jint index = i*cols_this + j;
+			assert(index >= 0 && index < rows_this*cols_this);
+
+			array_this[index] = array_this[index] - array_other[index];
+		}
+	}
+
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj_this, array_this, 0);
+	(*env)->ReleaseFloatArrayElements(env, array_obj_other, array_other, 0);
+
+	return;
+}
+
+//@TODO: use the getter/setters as defined below
+JNIEXPORT jobject JNICALL
+Java_Matrix_transpose(JNIEnv *env, jclass obj_class, jobject obj) {
+	assert(env != NULL);
+	assert(obj_class != NULL);
+	assert(obj != NULL);
+
+	jmethodID constr_id;
+	jfieldID fid_data;
+
 	jint rows = get_rows(env, obj);
 	jint cols = get_cols(env, obj);
+
+	// Get matrix data
+	fid_data = (*env)->GetFieldID(env, obj_class, "data", "[F");
+	assert(fid_data != NULL);
+
+	jfloatArray array_obj = (*env)->GetObjectField(env, obj, fid_data);
+	assert(array_obj != NULL);
+
+	jfloat *array = (*env)->GetFloatArrayElements(env, array_obj, 0);
+	assert(array != NULL);
+	// done getting matrix data
+
+	jfloatArray array_obj_t = (*env)->NewFloatArray(env, rows*cols);
+	assert(array_obj_t != NULL);
+
+	jfloat *array_t = (*env)->GetFloatArrayElements(env, array_obj_t, 0);
+	assert(array_t != NULL);
+
+	for (jint i = 0; i < rows; i++) {
+		for (jint j = 0; j < cols; j++) {
+			jint index = i*cols + j;
+			assert(index >= 0 && index < rows*cols);
+
+			jint index_t = j*rows + i;
+			assert(index_t >= 0 && index_t < rows*cols);
+
+			jfloat elem = array[index];
+			array_t[index_t] = elem;
+		}
+	}
+	(*env)->ReleaseFloatArrayElements(env, array_obj_t, array_t, 0);
+
+	constr_id = (*env)->GetMethodID(env, obj_class, "<init>", "(II[F)V");
+	assert(constr_id != NULL);
+
+	jobject A = (*env)->NewObject(env, obj_class, constr_id, rows, cols, array_obj_t);
+	assert(A != NULL);
+
+	(*env)->ReleaseFloatArrayElements(env, array_obj, array, 0);
+
+	return A;
+}
+
+JNIEXPORT jobject JNICALL
+Java_Matrix_fromArray(JNIEnv *env, jclass obj_class, jint rows, jint cols, jfloatArray array_obj) {
+	assert(env != NULL);
+	assert(obj_class != NULL);
+	assert(array_obj != NULL);
+	assert(rows > 0);
+	assert(cols > 0);
+
+	jmethodID constr_id;
+
+	constr_id = (*env)->GetMethodID(env, obj_class, "<init>", "(II[F)V");
+	assert(constr_id != NULL);
+
+	jobject A = (*env)->NewObject(env, obj_class, constr_id, rows, cols, array_obj);
+	assert(A != NULL);
+
+	return A;
+}
+
+
+JNIEXPORT jfloatArray JNICALL
+Java_Matrix_toArray(JNIEnv *env, jobject this) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class;
+	jfieldID fid_data;
+
+	jint rows = get_rows(env, this);
+	jint cols = get_cols(env, this);
+
+	// Get matrix data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	fid_data = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data != NULL);
+
+	jfloatArray array_obj = (*env)->GetObjectField(env, this, fid_data);
+	assert(array_obj != NULL);
+
+	jfloat *array = (*env)->GetFloatArrayElements(env, array_obj, 0);
+	assert(array != NULL);
+	// done getting matrix data
+
+	jfloatArray array_obj_cpy = (*env)->NewFloatArray(env, rows*cols);
+	assert(array_obj_cpy != NULL);
+
+	jfloat *array_cpy = (*env)->GetFloatArrayElements(env, array_obj_cpy, 0);
+	assert(array_cpy != NULL);
+
+	for (jint i = 0; i < rows*cols; i++) {
+		array_cpy[i] = array[i];
+	}
+
+	(*env)->ReleaseFloatArrayElements(env, array_obj, array, 0);
+
+	return array_obj;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_Matrix_is_1equal(JNIEnv *env, jobject this, jobject other) {
+	assert(env != NULL);
+	assert(this != NULL);
+	assert(other != NULL);
+
+	jclass this_class, other_class;
+	jmethodID mid_get_this, mid_get_other;
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	jint rows_other = get_rows(env, other);
+	jint cols_other = get_cols(env, other);
+
+	assert(rows_this == rows_other);
+	assert(cols_this == cols_other);
+
+	this_class = (*env)->GetObjectClass(env, this);
+	other_class = (*env)->GetObjectClass(env, other);
+
+	assert(this_class != NULL);
+	assert(other_class != NULL);
+
+	mid_get_this = (*env)->GetMethodID(env, this_class, "get_element", "(II)F");
+	mid_get_other = (*env)->GetMethodID(env, other_class, "get_element", "(II)F");
+
+	assert(mid_get_this != NULL);
+	assert(mid_get_other != NULL);
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			float elemA = (jfloat)((*env)->CallFloatMethod(env, this, mid_get_this, i, j));
+			float elemB = (jfloat)((*env)->CallFloatMethod(env, this, mid_get_other, i, j));
+			if (elemA != elemA) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+JNIEXPORT void JNICALL
+Java_Matrix_set_1element(JNIEnv *env, jobject this, jint row, jint col, jfloat elem) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class;
+	jfieldID fid_data;
+
+	jint rows = get_rows(env, this);
+	jint cols = get_cols(env, this);
 
 	assert(row >= 0 && row < rows);
 	assert(col >= 0 && col < cols);
 
-	jfloat singleton[] = {element};
+	// Get matrix data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
 
-	data *obj_data = get_data(env, obj);
-	assert(obj_data != NULL);
-	assert(obj_data->data_obj != NULL);
+	fid_data = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data != NULL);
+
+	jfloatArray array_obj = (*env)->GetObjectField(env, this, fid_data);
+	assert(array_obj != NULL);
+
+	jfloat *array = (*env)->GetFloatArrayElements(env, array_obj, 0);
+	assert(array != NULL);
+	// done getting matrix data
 
 	jint index = row*cols + col;
+	assert(index >= 0 && index < rows*cols);
 
-	(*env)->SetFloatArrayRegion(env, singleton, index, 1, obj_data->data_obj);
+	array[index] = elem;
 
-	free_data(env, obj_data);
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj, array, 0);
+
 	return;
 }
 
 JNIEXPORT jfloat JNICALL
-Java_Matrix_get_1element(JNIEnv *env, jobject obj, jint row, jint col) {
-	jint rows = get_rows(env, obj);
-	jint cols = get_cols(env, obj);
+Java_Matrix_get_1element(JNIEnv *env, jobject this, jint row, jint col) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class;
+	jfieldID fid_data;
+
+	jint rows = get_rows(env, this);
+	jint cols = get_cols(env, this);
 
 	assert(row >= 0 && row < rows);
 	assert(col >= 0 && col < cols);
-	
-	data *obj_data = get_data(env, obj);
 
-	jint index = (row * cols) + col;
-	jfloat element = obj_data->data_array[index];
+	// Get matrix data
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
 
-	free_data(env, obj_data);
+	fid_data = (*env)->GetFieldID(env, this_class, "data", "[F");
+	assert(fid_data != NULL);
 
-	return element;
+	jfloatArray array_obj = (*env)->GetObjectField(env, this, fid_data);
+	assert(array_obj != NULL);
 
+	jfloat *array = (*env)->GetFloatArrayElements(env, array_obj, 0);
+	assert(array != NULL);
+	// done getting matrix data
+
+	jint index = row*cols + col;
+	assert(index >= 0 && index < rows*cols);
+
+	jfloat elem = array[index];
+
+	// free matrix data
+	(*env)->ReleaseFloatArrayElements(env, array_obj, array, 0);
+
+	return elem;
 }
 
 JNIEXPORT void JNICALL
-Java_Matrix_print(JNIEnv *env, jobject obj) {
-	jclass object_class; // object's class
+Java_Matrix_print(JNIEnv *env, jobject this) {
+	assert(env != NULL);
+	assert(this != NULL);
+
+	jclass this_class; // object's class
 	jfieldID fid_rows, fid_cols; // field IDs
 	jmethodID mid_get; // instance method ID
 
 	// Get Reference to object's class
-	object_class = (*env)->GetObjectClass(env, obj);
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
 
 	// Look for instance fields rows, cols, data in the object class
-	fid_rows = (*env)->GetFieldID(env, object_class, "rows", "I");
-	fid_cols = (*env)->GetFieldID(env, object_class, "cols", "I");
+	fid_rows = (*env)->GetFieldID(env, this_class, "rows", "I");
+	fid_cols = (*env)->GetFieldID(env, this_class, "cols", "I");
 
-	if (fid_rows == NULL || fid_cols == NULL) {
-		return; // failed to find fields
-	}
+	assert(fid_rows != NULL);
+	assert(fid_cols != NULL);
 
 	// Look for get_elemet, set_element IDs
-	mid_get = (*env)->GetMethodID(env, object_class, "get_element", "(II)F");
-
-	if (mid_get == NULL) {
-		return; // failed to find instance methods
-	}
+	mid_get = (*env)->GetMethodID(env, this_class, "get_element", "(II)F");
+	assert(mid_get != NULL);
 
 	// Read instance fields rows, cols, data
-	jint rows = (*env)->GetIntField(env, obj, fid_rows);
-	jint cols = (*env)->GetIntField(env, obj, fid_cols);
+	jint rows = (*env)->GetIntField(env, this, fid_rows);
+	jint cols = (*env)->GetIntField(env, this, fid_cols);
 
 	for (jint i = 0; i < rows; i++) {
 		for (jint j = 0; j < cols; j++) {
-			jfloat element = (jfloat)((*env)->CallFloatMethod(env, obj, mid_get, i, j));
-			printf("%f ", element);
+			jfloat elem = (jfloat)((*env)->CallFloatMethod(env, this, mid_get, i, j));
+			printf("%f ", elem);
 		}
 		printf("\n");
 	}
+	printf("\n");
 
 	return;
-
 }

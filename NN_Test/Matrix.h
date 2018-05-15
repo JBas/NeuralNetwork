@@ -9,11 +9,115 @@ extern "C" {
 #endif
 /*
  * Class:     Matrix
+ * Method:    sclr_mult
+ * Signature: (LMatrix;F)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_sclr_1mult__LMatrix_2F
+  (JNIEnv *, jclass, jobject, jfloat);
+
+/*
+ * Class:     Matrix
+ * Method:    sclr_add
+ * Signature: (LMatrix;F)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_sclr_1add__LMatrix_2F
+  (JNIEnv *, jclass, jobject, jfloat);
+
+/*
+ * Class:     Matrix
+ * Method:    sclr_mult
+ * Signature: (F)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_sclr_1mult__F
+  (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     Matrix
+ * Method:    sclr_add
+ * Signature: (F)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_sclr_1add__F
+  (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_mult
+ * Signature: (LMatrix;LMatrix;)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_matrix_1mult__LMatrix_2LMatrix_2
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_mult
+ * Signature: (LMatrix;)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_matrix_1mult__LMatrix_2
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_dot
+ * Signature: (LMatrix;LMatrix;)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_matrix_1dot
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_add
+ * Signature: (LMatrix;LMatrix;)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_matrix_1add__LMatrix_2LMatrix_2
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_sub
+ * Signature: (LMatrix;LMatrix;)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_matrix_1sub__LMatrix_2LMatrix_2
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_add
+ * Signature: (LMatrix;)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_matrix_1add__LMatrix_2
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_sub
+ * Signature: (LMatrix;)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_matrix_1sub__LMatrix_2
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     Matrix
  * Method:    transpose
  * Signature: (LMatrix;)LMatrix;
  */
 JNIEXPORT jobject JNICALL Java_Matrix_transpose
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     Matrix
+ * Method:    fromArray
+ * Signature: (II[F)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_fromArray
+  (JNIEnv *, jclass, jint, jint, jfloatArray);
+
+/*
+ * Class:     Matrix
+ * Method:    toArray
+ * Signature: ()[F
+ */
+JNIEXPORT jfloatArray JNICALL Java_Matrix_toArray
+  (JNIEnv *, jobject);
 
 /*
  * Class:     Matrix
