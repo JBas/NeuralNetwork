@@ -2,7 +2,44 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
+#include <string.h>
 #include "../NN_Test/Matrix.h"
+
+void printstr_to_file(char *arr, jboolean nl) {
+	FILE *f = fopen("file.txt", "a");
+	if (f == NULL)
+	{
+	    printf("Error opening file!\n");
+	    exit(1);
+	}
+
+	/* print some text */
+	// const char *text = "Write this to the file";
+	if (nl) {
+		fprintf(f, "%s\n", arr);
+	} else {
+		fprintf(f, "%s", arr);
+	}
+	fclose(f);
+}
+
+void printint_to_file(jfloat i, jboolean nl) {
+	FILE *f = fopen("file.txt", "a");
+	if (f == NULL)
+	{
+	    printf("Error opening file!\n");
+	    exit(1);
+	}
+
+	/* print integers and floats */
+	if (nl) {
+		fprintf(f, "%f\n", i);
+	} else {
+		fprintf(f, "%f", i);
+	}
+	fclose(f);
+}
 
 jint get_rows(JNIEnv *env, jobject obj) {
 	assert(env != NULL);
@@ -42,6 +79,122 @@ jint get_cols(JNIEnv *env, jobject obj) {
 	assert(cols > 0);
 
 	return cols;
+}
+
+float sig(float x) {
+	return 1 / (1 + (float)exp(-x));
+}
+
+float dsig(float x) {
+	return x * (1 - x);
+}
+
+float atan_(float x) {
+	return atan(x);
+}
+
+float datan_(float x) {
+	return 1 / (1 + x*x);
+}
+
+JNIEXPORT void JNICALL
+Java_Matrix_matrix_1map__Ljava_lang_String_2(JNIEnv *env, jobject this, jstring func) {
+	assert(env != NULL);
+	assert(this != NULL);
+	assert(func != NULL);
+
+	jclass this_class;
+	jmethodID mid_get_this, mid_set_this;
+
+	jint rows_this = get_rows(env, this);
+	jint cols_this = get_cols(env, this);
+
+	this_class = (*env)->GetObjectClass(env, this);
+	assert(this_class != NULL);
+
+	mid_get_this = (*env)->GetMethodID(env, this_class, "get_element", "(II)F");
+	mid_set_this = (*env)->GetMethodID(env, this_class, "set_element", "(IIF)V");
+
+	assert(mid_get_this != NULL);
+	assert(mid_set_this != NULL);
+
+	const char *f_str = (*env)->GetStringUTFChars(env, func, 0);
+	assert(f_str != NULL);
+
+	for (jint i = 0; i < rows_this; i++) {
+		for (jint j = 0; j < cols_this; j++) {
+			jfloat elem = (*env)->CallFloatMethod(env, this, mid_get_this, i, j);
+			if (strcmp(f_str, "sig") == 0) {
+				elem = sig(elem);
+				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
+			} else if (strcmp(f_str, "dsig") == 0) {
+				elem = dsig(elem);
+				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
+			} else if (strcmp(f_str, "atan") == 0) {
+				elem = atan_(elem);
+				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
+			} else if (strcmp(f_str, "datan") == 0) {
+				elem = datan(elem);
+				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
+			}
+		}
+	}
+
+	(*env)->ReleaseStringUTFChars(env, func, f_str);
+
+	return;
+}
+
+JNIEXPORT jobject JNICALL
+Java_Matrix_matrix_1map__LMatrix_2Ljava_lang_String_2(JNIEnv *env, jclass obj_class, jobject A, jstring func) {
+	assert(env != NULL);
+	assert(obj_class != NULL);
+	assert(A != NULL);
+	assert(func != NULL);
+
+	jmethodID constr_id;
+	jmethodID mid_get, mid_set;
+
+	jint rowsA = get_rows(env, A);
+	jint colsA = get_cols(env, A);
+
+	constr_id = (*env)->GetMethodID(env, obj_class, "<init>", "(II[F)V");
+	assert(constr_id != NULL);
+
+	jobject C = (*env)->NewObject(env, obj_class, constr_id, rowsA, colsA, NULL);
+	assert(C != NULL);
+
+	mid_get = (*env)->GetMethodID(env, obj_class, "get_element", "(II)F");
+	mid_set = (*env)->GetMethodID(env, obj_class, "set_element", "(IIF)V");
+
+	assert(mid_get != NULL);
+	assert(mid_set != NULL);
+
+	const char *f_str = (*env)->GetStringUTFChars(env, func, 0);
+	assert(f_str != NULL);
+
+	for (jint i = 0; i < rowsA; i++) {
+		for (jint j = 0; j < colsA; j++) {
+			jfloat elem = (*env)->CallFloatMethod(env, A, mid_get, i, j);
+			if (strcmp(f_str, "sig") == 0) {
+				elem = sig(elem);
+				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
+			} else if (strcmp(f_str, "dsig") == 0) {
+				elem = dsig(elem);
+				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
+			} else if (strcmp(f_str, "atan") == 0) {
+				elem = atan_(elem);
+				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
+			} else if (strcmp(f_str, "datan") == 0) {
+				elem = datan(elem);
+				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
+			}
+		}
+	}
+
+	(*env)->ReleaseStringUTFChars(env, func, f_str);
+
+	return C;
 }
 
 JNIEXPORT jobject JNICALL
@@ -494,7 +647,7 @@ Java_Matrix_transpose(JNIEnv *env, jclass obj_class, jobject obj) {
 	constr_id = (*env)->GetMethodID(env, obj_class, "<init>", "(II[F)V");
 	assert(constr_id != NULL);
 
-	jobject A = (*env)->NewObject(env, obj_class, constr_id, rows, cols, NULL);
+	jobject A = (*env)->NewObject(env, obj_class, constr_id, cols, rows, NULL);
 	assert(A != NULL);
 
 	mid_get = (*env)->GetMethodID(env, obj_class, "get_element", "(II)F");
@@ -505,8 +658,8 @@ Java_Matrix_transpose(JNIEnv *env, jclass obj_class, jobject obj) {
 
 	for (jint i = 0; i < rows; i++) {
 		for (jint j = 0; j < cols; j++) {
-			jfloat elem = (*env)->CallFloatMethod(env, obj, mid_get, j, i);
-			(*env)->CallFloatMethod(env, A, mid_set, i, j, elem);
+			jfloat elem = (*env)->CallFloatMethod(env, obj, mid_get, i, j);
+			(*env)->CallFloatMethod(env, A, mid_set, j, i, elem);
 		}
 	}
 
@@ -693,6 +846,10 @@ Java_Matrix_get_1element(JNIEnv *env, jobject this, jint row, jint col) {
 	return elem;
 }
 
+
+
+
+
 JNIEXPORT void JNICALL
 Java_Matrix_print(JNIEnv *env, jobject this) {
 	assert(env != NULL);
@@ -725,10 +882,14 @@ Java_Matrix_print(JNIEnv *env, jobject this) {
 		for (jint j = 0; j < cols; j++) {
 			jfloat elem = (jfloat)((*env)->CallFloatMethod(env, this, mid_get, i, j));
 			printf("%f ", elem);
+			// printint_to_file(elem, false);
+			// printstr_to_file(" ", false);
 		}
 		printf("\n");
+		// printstr_to_file("", true);
 	}
 	printf("\n");
+	// printstr_to_file("", true);
 
 	return;
 }

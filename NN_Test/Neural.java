@@ -2,7 +2,7 @@ public class Neural {
   private int num_input;
   private int num_hidden;
   private int num_output;
-  private float learning_rate;
+  private float learning_rate = (float)0.01;
   
   private Matrix weights_IH;
   private Matrix weights_HO;
@@ -23,12 +23,25 @@ public class Neural {
     this.bias_H.randomize();
     this.bias_O = new Matrix(num_output, 1, null);
     this.bias_O.randomize();
-    
-    this.learning_rate = 0.1;
   }
   
   public native Matrix feedforward(Matrix input);
   public native void train(Matrix input, Matrix answer);
+  
+  
+  public Matrix getWeights_IH() {
+    return this.weights_HO;
+  }
+  
+  public Matrix getWeights_HO() {
+    return this.weights_HO;
+  }
+  public Matrix getBias_H() {
+    return this.bias_H;
+  }
+  public Matrix getBias_O() {
+    return this.bias_O;
+  }
   
   static { System.loadLibrary("neural"); }
 }

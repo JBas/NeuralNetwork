@@ -9,6 +9,22 @@ extern "C" {
 #endif
 /*
  * Class:     Matrix
+ * Method:    matrix_map
+ * Signature: (LMatrix;Ljava/lang/String;)LMatrix;
+ */
+JNIEXPORT jobject JNICALL Java_Matrix_matrix_1map__LMatrix_2Ljava_lang_String_2
+  (JNIEnv *, jclass, jobject, jstring);
+
+/*
+ * Class:     Matrix
+ * Method:    matrix_map
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_Matrix_matrix_1map__Ljava_lang_String_2
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     Matrix
  * Method:    sclr_mult
  * Signature: (LMatrix;F)LMatrix;
  */
