@@ -97,6 +97,17 @@ float datan_(float x) {
 	return 1 / (1 + x*x);
 }
 
+float mutate(float x) {
+	if (rand() < 0.1) {
+	// return 2 * Math.random() - 1;
+		float r = sqrt(-2 * log(rand()));
+		float theta = 2*M_PI*rand();
+		return x + cos(theta)*0.1;
+	} else {
+		return x;
+	}
+}
+
 JNIEXPORT void JNICALL
 Java_Matrix_matrix_1map__Ljava_lang_String_2(JNIEnv *env, jobject this, jstring func) {
 	assert(env != NULL);
@@ -134,7 +145,10 @@ Java_Matrix_matrix_1map__Ljava_lang_String_2(JNIEnv *env, jobject this, jstring 
 				elem = atan_(elem);
 				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
 			} else if (strcmp(f_str, "datan") == 0) {
-				elem = datan(elem);
+				elem = datan_(elem);
+				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
+			} else if (strcmp(f_str, "mutate") == 0) {
+				elem = mutate(elem);
 				(*env)->CallFloatMethod(env, this, mid_set_this, i, j, elem);
 			}
 		}
@@ -186,7 +200,10 @@ Java_Matrix_matrix_1map__LMatrix_2Ljava_lang_String_2(JNIEnv *env, jclass obj_cl
 				elem = atan_(elem);
 				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
 			} else if (strcmp(f_str, "datan") == 0) {
-				elem = datan(elem);
+				elem = datan_(elem);
+				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
+			} else if (strcmp(f_str, "mutate") == 0) {
+				elem = mutate(elem);
 				(*env)->CallFloatMethod(env, C, mid_set, i, j, elem);
 			}
 		}

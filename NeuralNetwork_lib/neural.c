@@ -46,8 +46,8 @@ Java_Neural_train(JNIEnv *env, jobject this, jobject input, jobject answer) {
 	assert(input != NULL);
 	assert(answer != NULL);
 
-	jstring sig_f = (*env)->NewStringUTF(env, "sig");
-	jstring dsig_f = (*env)->NewStringUTF(env, "dsig");
+	jstring sig_f = (*env)->NewStringUTF(env, "atan");
+	jstring dsig_f = (*env)->NewStringUTF(env, "datan");
 	assert(sig_f != NULL);
 	assert(dsig_f != NULL);
 
@@ -236,7 +236,7 @@ Java_Neural_feedforward(JNIEnv *env, jobject this, jobject input) {
 	assert(this != NULL);
 	assert(input != NULL);
 
-	jstring sig_f = (*env)->NewStringUTF(env, "sig");
+	jstring sig_f = (*env)->NewStringUTF(env, "atan");
 	assert(sig_f != NULL);
 
 	jclass this_class, matrix_class;
